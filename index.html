@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENVERI CAFFE | Menaxhimi i Plotë</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --primary: #d4a373; --bg: #121212; --card: #1e1e1e; --green: #2ecc71; --red: #e74c3c; --text: #ffffff; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; }
+        
+        /* LOGIN SCREEN */
+        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .pin-box { background:var(--card); padding:30px; border-radius:15px; border:1px solid var(--primary); text-align:center; }
+        .pin-input { font-size:24px; padding:10px; width:150px; text-align:center; background:#000; color:var(--primary); border:1px solid #444; border-radius:8px; margin-bottom:15px; }
+
+        /* Sidebar */
+        .sidebar { width: 80px; background: #000; display: none; flex-direction: column; align-items: center; padding-top: 20px; gap: 25px; border-right: 1px solid #333; }
+        .nav-item { color: #555; cursor: pointer; font-size: 24px; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+
+        .container { flex-grow: 1; padding: 20px; overflow-y: auto; display:none; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Arka */
+        .pos-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .product-card { background: var(--card); padding: 25px 10px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #333; font-weight: bold; }
+        .product-card:active { transform: scale(0.95); background: var(--primary); }
+        
+        .cart { background: white; color: #333; border-radius: 15px; padding: 20px; display: flex; flex-direction: column; height: 80vh; }
+        .cart-items { flex-grow: 1; overflow-y: auto; border-bottom: 2px solid #eee; margin-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+        
+        /* Raportet */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: var(--card); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #333; }
+        
+        .form-group { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; }
+        input, select { padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; margin-right: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--card); border-radius: 10px; overflow: hidden; }
+        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #333; }
+        
+        .btn { padding: 12px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-pay { background: var(--green); color: white; width: 100%; font-size: 18px; margin-top: 10px; }
+        .btn-cancel { background: none; color: var(--red); cursor: pointer; border: none; }
+        .logout-btn { background: var(--red); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="pin-box">
+        <h2 style="color:var(--primary)">☕ ENVERI CAFFE</h2>
+        <p>Shëno PIN-in për t'u kyçur:</p>
+        <input type="password" id="pin-field" class="pin-input" maxlength="4" placeholder="****">
+        <br>
+        <button class="btn" style="background:var(--green); color:white; width:100%" onclick="checkLogin()">KYÇU</button>
+    </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+    <div class="nav-item active" onclick="showPage('pos-page', this)"><i class="fas fa-cash-register"></i></div>
+    <div class="nav-item" id="report-nav" onclick="showPage('report-page', this)"><i class="fas fa-file-invoice-dollar"></i></div>
+    <div class="nav-item" onclick="logout()" style="margin-top:auto; color:var(--red); padding-bottom:20px;"><i class="fas fa-power-off"></i></div>
+</div>
+
+<div class="container" id="main-container">
+    
+    <div id="pos-page" class="page active">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+            <h1>☕ ENVERI CAFFE - Arka</h1>
+            <button class="logout-btn" id="simple-logout" onclick="logout()">DIL (LOGOUT)</button>
+        </div>
+        <div class="pos-grid">
+            <div class="menu-grid">
+                <div class="product-card" onclick="addToCart('Makiato Vogël', 1.00)">Makiato V.<br>1.00€</div>
+                <div class="product-card" onclick="addToCart('Makiato Madhe', 1.50)">Makiato M.<br>1.50€</div>
+                <div class="product-card" onclick="addToCart('Ekspreso', 1.00)">Ekspreso<br>1.00€</div>
+                <div class="product-card" onclick="addToCart('Çaj Rusi', 0.50)">Çaj Rusi<br>0.50€</div>
+                <div class="product-card" onclick="addToCart('Ujë', 1.00)">Ujë<br>1.00€</div>
+                <div class="product-card" onclick="addToCart('Pije/Lëng', 2.00)">Pije/Lëng<br>2.00€</div>
+            </div>
+            <div class="cart">
+                <h3 style="margin-top:0"><i class="fas fa-shopping-basket"></i> Porosia Aktuale</h3>
+                <div id="cartItems" class="cart-items"></div>
+                <h2 id="totalDisplay" style="text-align:center; font-size: 35px; color: #333; margin: 10px 0;">0.00 €</h2>
+                <button class="btn btn-pay" onclick="completeSale()">PËRFUNDO POROSINË</button>
+                <button onclick="resetCart()" style="background:none; border:none; color: #999; margin-top:10px; cursor:pointer;">Pastro Shportën</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="report-page" class="page">
+        <h1>📊 Analiza e Biznesit (Vetëm Admin)</h1>
+        
+        <div class="stats">
+            <div class="stat-box">Shpenzime (Mall)<h2 id="rep-hyrje" style="color:var(--red)">0.00€</h2></div>
+            <div class="stat-box">Xhiro (Shitje)<h2 id="rep-dalje" style="color:var(--green)">0.00€</h2></div>
+            <div class="stat-box">Diferenca Neto<h2 id="rep-fitimi" style="color:var(--primary)">0.00€</h2></div>
+        </div>
+
+        <div class="form-group">
+            <h3>🛒 Regjistro Blerje Malli (Hyrje)</h3>
+            <input type="text" id="h-emri" placeholder="Artikulli (p.sh. Kafe 5kg)">
+            <input type="number" id="h-shuma" placeholder="Shuma €">
+            <select id="monthSelect">
+                <option value="0">Janar</option><option value="1">Shkurt</option><option value="2">Mars</option>
+                <option value="3">Prill</option><option value="4">Maj</option><option value="5">Qershor</option>
+                <option value="6">Korrik</option><option value="7">Gusht</option><option value="8">Shtator</option>
+                <option value="9">Tetor</option><option value="10">Nëntor</option><option value="11">Dhjetor</option>
+            </select>
+            <button class="btn" style="background:var(--primary); color:white;" onclick="registerPurchase()">Ruaj Blerjen</button>
+        </div>
+
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h3>📜 Historia e Transaksioneve</h3>
+            <button class="btn" style="background:#444; color:white;" onclick="exportToCSV()">Shkarko Raportin (Excel)</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Përshkrimi</th>
+                    <th>Lloji</th>
+                    <th>Shuma</th>
+                    <th>Veprimi</th>
+                </tr>
+            </thead>
+            <tbody id="transactionList"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const USERS = {
+        "1111": "kamarier",
+        "2222": "kamarier",
+        "0000": "admin"
+    };
+
+    function checkLogin() {
+        const pin = document.getElementById('pin-field').value;
+        const role = USERS[pin];
+
+        if(role) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-container').style.display = 'block';
+            
+            if(role === 'admin') {
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('simple-logout').style.display = 'none';
+            } else {
+                document.getElementById('sidebar').style.display = 'none';
+                document.getElementById('simple-logout').style.display = 'block';
+                showPage('pos-page');
+            }
+        } else {
+            alert("PIN i gabuar!");
+        }
+        document.getElementById('pin-field').value = '';
+    }
+
+    function logout() {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('main-container').style.display = 'none';
+        document.getElementById('sidebar').style.display = 'none';
+    }
+
+    let transactions = JSON.parse(localStorage.getItem('enveri_pro_data')) || [];
+    let currentTotal = 0;
+    let currentCart = [];
+
+    function showPage(id, el) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(el) el.classList.add('active');
+        if(id === 'report-page') updateReports();
+    }
+
+    function addToCart(name, price) {
+        currentCart.push({name, price});
+        currentTotal += price;
+        renderCart();
+    }
+
+    function renderCart() {
+        const div = document.getElementById('cartItems');
+        div.innerHTML = currentCart.map((item, index) => `
+            <div class="item-row">
+                <span>${item.name}</span>
+                <div>
+                    <b>${item.price.toFixed(2)}€</b>
+                    <button class="btn-cancel" onclick="removeItem(${index})"><i class="fas fa-times-circle"></i></button>
+                </div>
+            </div>
+        `).join('');
+        document.getElementById('totalDisplay').innerText = currentTotal.toFixed(2) + " €";
+    }
+
+    function removeItem(index) {
+        currentTotal -= currentCart[index].price;
+        currentCart.splice(index, 1);
+        renderCart();
+    }
+
+    function completeSale() {
+        if(currentTotal === 0) return;
+        transactions.push({
+            id: Date.now(),
+            date: new Date(),
+            month: new Date().getMonth(),
+            type: 'dalje',
+            description: "Shitje Arka",
+            amount: currentTotal
+        });
+        saveData();
+        resetCart();
+        alert("Shitja u krye!");
+    }
+
+    function resetCart() {
+        currentCart = []; currentTotal = 0; renderCart();
+    }
+
+    function registerPurchase() {
+        const name = document.getElementById('h-emri').value;
+        const amount = parseFloat(document.getElementById('h-shuma').value);
+        const month = parseInt(document.getElementById('monthSelect').value);
+        if(!name || !amount) { alert("Plotëso të dhënat!"); return; }
+
+        transactions.push({
+            id: Date.now(), date: new Date(), month: month,
+            type: 'hyrje', description: "Blerje: " + name, amount: amount
+        });
+        saveData();
+        document.getElementById('h-emri').value = ''; 
+        document.getElementById('h-shuma').value = '';
+        updateReports();
+    }
+
+    function deleteTransaction(id) {
+        const pin = prompt("PIN-i i Pronarit (0000) për fshirje:");
+        if(pin === "0000") {
+            transactions = transactions.filter(t => t.id !== id);
+            saveData(); updateReports();
+        } else { alert("PIN i gabuar!"); }
+    }
+
+    function updateReports() {
+        const list = document.getElementById('transactionList');
+        list.innerHTML = "";
+        let totalHyrje = 0; let totalDalje = 0;
+
+        transactions.slice().reverse().forEach(t => {
+            const color = t.type === 'hyrje' ? 'var(--red)' : 'var(--green)';
+            const d = new Date(t.date);
+            list.innerHTML += `
+                <tr>
+                    <td>${d.toLocaleDateString()}</td>
+                    <td>${t.description}</td>
+                    <td style="color:${color}">${t.type.toUpperCase()}</td>
+                    <td style="color:${color}">${t.amount.toFixed(2)}€</td>
+                    <td><button class="btn-cancel" onclick="deleteTransaction(${t.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            if(t.type === 'hyrje') totalHyrje += t.amount;
+            else totalDalje += t.amount;
+        });
+        document.getElementById('rep-hyrje').innerText = totalHyrje.toFixed(2) + " €";
+        document.getElementById('rep-dalje').innerText = totalDalje.toFixed(2) + " €";
+        document.getElementById('rep-fitimi').innerText = (totalDalje - totalHyrje).toFixed(2) + " €";
+    }
+
+    function exportToCSV() {
+        let csv = "Data,Pershkrimi,Lloji,Shuma\n";
+        transactions.forEach(t => { csv += `${new Date(t.date).toLocaleDateString()},${t.description},${t.type},${t.amount}\n`; });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'raporti_enveri.csv'; a.click();
+    }
+
+    function saveData() { localStorage.setItem('enveri_pro_data', JSON.stringify(transactions)); }
+
+    document.getElementById('monthSelect').value = new Date().getMonth();
+    updateReports();
+</script>
+</body>
+</html>
